@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: Cedric DELGEHIER <cedric@openio.io>
-  description: PURPOSE
+  description: install and configure elasticsearch
   company: OpenIO
   license: AGPL-3.0
 

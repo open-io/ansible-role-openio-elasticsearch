@@ -1,8 +1,13 @@
 ---
-openio_ROLENAME_sysconfig_dir: "/etc/oio/sds/{{ openio_ROLENAME_namespace }}"
-openio_ROLENAME_servicename: "ROLENAME-{{ openio_ROLENAME_serviceid }}"
+openio_elasticsearch_sysconfig_dir: "/etc/oio/sds/{{ openio_elasticsearch_namespace }}"
+openio_elasticsearch_servicename: "elasticsearch-{{ openio_elasticsearch_serviceid }}"
 
-openio_ROLENAME_definition_file: >
-  "{{ openio_ROLENAME_sysconfig_dir }}/
-  {{ openio_ROLENAME_servicename }}/{{ openio_ROLENAME_servicename }}.conf"
+openio_elasticsearch_definition_file: >
+  "{{ openio_elasticsearch_sysconfig_dir }}/
+  {{ openio_elasticsearch_servicename }}/{{ openio_elasticsearch_servicename }}.conf"
+openio_elasticsearch_log_dir:
+  "/var/log/oio/sds/{{ openio_elasticsearch_namespace }}/{{ openio_elasticsearch_servicename }}"
+openio_elasticsearch_classpath:
+  - "{{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}"
+  - /usr/share/elasticsearch/lib/*
 ...

@@ -1,0 +1,12 @@
+---
+# {{ ansible_managed }}
+{{ openio_elasticsearch_additional_config | default({}) | combine({
+  "cluster.name": openio_elasticsearch_cluster_name,
+  "node.name": openio_elasticsearch_node_name,
+  "network.bind_host": openio_elasticsearch_bind_address,
+  "network.publish_host": openio_elasticsearch_bind_address,
+  "http.port": openio_elasticsearch_http_port,
+  "transport.tcp.port": openio_elasticsearch_transport_tcp_port,
+  "path": {"data": openio_elasticsearch_volume, "logs": openio_elasticsearch_log_dir},
+}) | to_nice_yaml }}
+...
