@@ -1,9 +1,39 @@
 ---
+- name: Add Elastic gpg key
+  apt_key:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    state: present
+  register: add_repository_key
+  ignore_errors: "{{ openio_elasticsearch_ignore_key_error }}"
+
+- name: Ensure curl is present (on older systems without SNI).
+  package:
+    name: curl
+    state: present
+  when: add_repository_key is failed
+
+- name: Add Elasticsearch apt key (alternative for older systems without SNI).
+  shell: "curl -sSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -"
+  args:
+    warn: false
+  when: add_repository_key is failed
+
+- name: Check that HTTPS transport is available to APT
+  apt:
+    name: apt-transport-https
+    state: present
+
+- name: repository installation
+  apt_repository:
+    filename: "{{ openio_elasticsearch_repo_filename }}"
+    repo: "{{ openio_elasticsearch_repo_baseurl }}"
+    update_cache: true
+
 - name: Install packages
   package:
     name: "{{ pkg }}"
     state: present
-  with_items: "{{ ROLENAME_packages }}"
+  with_items: "{{ elasticsearch_packages }}"
   loop_control:
     loop_var: pkg
   ignore_errors: "{{ ansible_check_mode }}"

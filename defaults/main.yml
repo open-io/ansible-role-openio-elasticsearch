@@ -1,16 +1,52 @@
-# roles/ROLENAME/defaults/main.yml
+# roles/elasticsearch/defaults/main.yml
 ---
-openio_ROLENAME_namespace: "OPENIO"
-openio_ROLENAME_serviceid: "0"
+openio_elasticsearch_namespace: "OPENIO"
+openio_elasticsearch_serviceid: "0"
 
-openio_ROLENAME_gridinit_dir: "/etc/gridinit.d/{{ openio_ROLENAME_namespace }}"
-openio_ROLENAME_gridinit_file_prefix: ""
+openio_elasticsearch_gridinit_dir: "/etc/gridinit.d/{{ openio_elasticsearch_namespace }}"
+openio_elasticsearch_gridinit_file_prefix: ""
 
-#openio_ROLENAME_bind_interface: "{{ ansible_default_ipv4.alias }}"
-#openio_ROLENAME_bind_address:
-#  "{{ hostvars[inventory_hostname]['ansible_' + openio_ROLENAME_bind_interface]['ipv4']['address'] }}"
+openio_elasticsearch_bind_interface: "{{ ansible_default_ipv4.alias }}"
+openio_elasticsearch_bind_address:
+  "{{ hostvars[inventory_hostname]['ansible_' + openio_elasticsearch_bind_interface]['ipv4']['address'] }}"
 
-#openio_ROLENAME_volume: "/var/lib/oio/sds/{{ openio_ROLENAME_namespace }}/ROLENAME-{{ openio_ROLENAME_serviceid }}"
-openio_ROLENAME_provision_only: false
-openio_ROLENAME_location: "{{ ansible_hostname }}.{{ openio_ROLENAME_serviceid }}"
+openio_elasticsearch_cluster_name: "{{ openio_elasticsearch_namespace }}-1"
+openio_elasticsearch_node_name: "{{ ansible_hostname }}"
+
+openio_elasticsearch_volume:
+  "/var/lib/oio/sds/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
+openio_elasticsearch_provision_only: false
+
+openio_elasticsearch_version: "6.x"
+openio_elasticsearch_ignore_key_error: false
+
+openio_elasticsearch_max_map_count: 262144
+openio_elasticsearch_sysctl:
+  - name: vm.max_map_count
+    value: 262144
+openio_elasticsearch_java_args: "-Xms{{ openio_elasticsearch_memory }} -Xmx{{ openio_elasticsearch_memory }} \
+  -XX:+UseConcMarkSweepGC \
+  -XX:CMSInitiatingOccupancyFraction=75 \
+  -XX:+UseCMSInitiatingOccupancyOnly \
+  -XX:+AlwaysPreTouch \
+  -server \
+  -Djava.awt.headless=true \
+  -Dfile.encoding=UTF-8 \
+  -Djna.nosys=true \
+  -Djdk.io.permissionsUseCanonicalPath=true \
+  -Dio.netty.noUnsafe=true \
+  -Dio.netty.noKeySetOptimization=true \
+  -Dio.netty.recycler.maxCapacityPerThread=0 \
+  -Dlog4j.skipJansi=true \
+  -Dlog4j.shutdownHookEnabled=false \
+  -Dlog4j2.disable.jmx=true"
+
+openio_elasticsearch_pid_directory:
+  "/run/elasticsearch/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
+openio_elasticsearch_memory: "4096M"
+
+openio_elasticsearch_http_port: 6400
+openio_elasticsearch_transport_tcp_port: 6450
+
+openio_elasticsearch_additional_config: {}
 ...

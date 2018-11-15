@@ -1,4 +1,4 @@
-# roles/ROLENAME/tasks/main.yml
+# roles/elasticsearch/tasks/main.yml
 ---
 - name: "Include {{ ansible_distribution }} variables"
   include_vars: "{{ item }}"
@@ -33,9 +33,10 @@
     path: "{{ item }}"
   register: _dir
   with_items:
-    - "/etc/gridinit.d/{{ openio_ROLENAME_namespace }}"
-    - "{{ openio_ROLENAME_sysconfig_dir }}/ROLENAME-{{ openio_ROLENAME_serviceid }}"
-    #- "{{ openio_ROLENAME_volume }}"
+    - "/etc/gridinit.d/{{ openio_elasticsearch_namespace }}"
+    - "{{ openio_elasticsearch_sysconfig_dir }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
+    - "{{ openio_elasticsearch_volume }}"
+    - "{{ openio_elasticsearch_pid_directory }}"
 
 - name: Ensure directories exists
   file:
@@ -51,13 +52,24 @@
 
 - name: Ensure log directory
   file:
-    path: "/var/log/oio/sds/{{ openio_ROLENAME_namespace }}/ROLENAME-{{ openio_ROLENAME_serviceid }}"
+    path: "{{ openio_elasticsearch_log_dir }}"
     state: directory
     owner: "{{ syslog_user }}"
     group: openio
     mode: 0750
     recurse: true
   tags: install
+
+- name: Ensure elasticsearch pid directory is persistant
+  lineinfile:
+    dest: /etc/tmpfiles.d/elasticsearch.conf
+    create: true
+    line: "d {{ openio_elasticsearch_pid_directory }} 755 openio openio -"
+    owner: openio
+    group: openio
+    mode: 0644
+  tags: install
+  when: openio_elasticsearch_pid_directory.split(' ')[0] | dirname is match("/run/.*")
 
 - name: Generate configuration files
   template:
@@ -67,20 +79,31 @@
     group: openio
     mode: 0644
   with_items:
-    - src: "ROLENAME.conf.j2"
-      dest: "{{ openio_ROLENAME_sysconfig_dir }}/\
-        ROLENAME-{{ openio_ROLENAME_serviceid }}/ROLENAME-{{ openio_ROLENAME_serviceid }}.conf"
-    - src: "gridinit_ROLENAME.conf.j2"
-      dest: "{{ openio_ROLENAME_gridinit_dir }}/{{ openio_ROLENAME_gridinit_file_prefix }}\
-        ROLENAME-{{ openio_ROLENAME_serviceid }}.conf"
-  register: _ROLENAME_conf
+    - src: "log4j2.properties.j2"
+      dest: "{{ openio_elasticsearch_sysconfig_dir }}/\
+        {{ openio_elasticsearch_servicename }}/log4j2.properties"
+    - src: "elasticsearch.yml.j2"
+      dest: "{{ openio_elasticsearch_sysconfig_dir }}/\
+        {{ openio_elasticsearch_servicename }}/elasticsearch.yml"
+    - src: "gridinit_elasticsearch.conf.j2"
+      dest: "{{ openio_elasticsearch_gridinit_dir }}/{{ openio_elasticsearch_gridinit_file_prefix }}\
+        {{ openio_elasticsearch_servicename }}.conf"
+  register: _elasticsearch_conf
 
-- name: restart ROLENAME
+- name: Ensure sysctl.conf settigns
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: "{{ item.state | default('present') }}"
+  with_items: "{{ openio_elasticsearch_sysctl }}"
+  when: ansible_virtualization_type != "docker"
+
+- name: restart elasticsearch
   shell: |
     gridinit_cmd reload
-    gridinit_cmd restart  {{openio_ROLENAME_namespace}}-ROLENAME-{{openio_ROLENAME_serviceid}}
-  when: 
-    - _ROLENAME_conf.changed
-    - not openio_ROLENAME_provision_only
+    gridinit_cmd restart  {{openio_elasticsearch_namespace}}-elasticsearch-{{openio_elasticsearch_serviceid}}
+  when:
+    - _elasticsearch_conf.changed
+    - not openio_elasticsearch_provision_only
   tags: configure
 ...
