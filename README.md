@@ -30,11 +30,14 @@ An Ansible role for elasticsearch. Specifically, the responsibilities of this ro
 | `openio_elasticsearch_node_name` | `"{{ ansible_hostname }}"` | ... |
 | `openio_elasticsearch_pid_directory` | `/run/elasticsearch/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}` | ... |
 | `openio_elasticsearch_provision_only` | `false` | ... |
+| `openio_elasticsearch_repo` | `"6.x"` | ... |
+| `openio_elasticsearch_safeguard_version` | `com.floragunn:search-guard-6:{{ openio_elasticsearch_version }}-23.2` | ... |
 | `openio_elasticsearch_serviceid` | `0` | ... |
 | `openio_elasticsearch_sysctl` | `` | ... |
 | `openio_elasticsearch_transport_tcp_port` | `6450` | ... |
-| `openio_elasticsearch_version` | `"6.x"` | ... |
+| `openio_elasticsearch_version` | `"6.4.3"` | ... |
 | `openio_elasticsearch_volume` | `/var/lib/oio/sds/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}` | ... |
+
 
 ## Dependencies
 

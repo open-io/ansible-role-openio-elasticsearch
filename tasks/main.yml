@@ -90,6 +90,28 @@
         {{ openio_elasticsearch_servicename }}.conf"
   register: _elasticsearch_conf
 
+- name: Copy searchguard files
+  copy:
+    src: searchguard/
+    dest: "{{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}"
+    owner: openio
+    group: openio
+
+- name: Install Safeguard plugin
+  command: "/usr/share/elasticsearch/bin/elasticsearch-plugin install \
+    '{{ openio_elasticsearch_safeguard_version }}' --batch --silent"
+  register: _sg_installed
+  changed_when: _sg_installed.rc == 0
+  failed_when: _sg_installed.rc == 1 and not 'already exists' in _sg_installed.stdout
+  environment:
+    CONF_DIR: "{{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}"
+    ES_PATH_CONF: "{{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}"
+
+- name: Add executable permission to Safeguard Admin shell
+  file:
+    path: /usr/share/elasticsearch/plugins/search-guard-6/tools/sgadmin.sh
+    mode: "+x"
+
 - name: Ensure sysctl.conf settigns
   sysctl:
     name: "{{ item.name }}"
@@ -105,5 +127,27 @@
   when:
     - _elasticsearch_conf.changed
     - not openio_elasticsearch_provision_only
+  register: _restart
   tags: configure
+
+- name: Wait for elasticsearch node
+  wait_for:
+    host: "{{ openio_elasticsearch_bind_address }}"
+    port: "{{ openio_elasticsearch_transport_tcp_port }}"
+  when: _restart.changed
+
+- name: Configure Safeguard
+  command: "/usr/share/elasticsearch/plugins/search-guard-6/tools/sgadmin.sh \
+    -cd {{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}/sgconfig \
+    -ts {{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}/sgconfig/truststore.jks \
+    -tspass changeit \
+    -ks {{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}/sgconfig/kirk-keystore.jks \
+    -kspass changeit \
+    -h {{ openio_elasticsearch_bind_address }} \
+    -p {{ openio_elasticsearch_transport_tcp_port }} \
+    -nhnv \
+    -icl"
+  changed_when: "'already exists' not in _sgadmin.stdout"
+  register: _sgadmin
+  #environment:
 ...
