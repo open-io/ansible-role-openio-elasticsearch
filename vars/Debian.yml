@@ -3,12 +3,13 @@
 ---
 elasticsearch_packages:
   - default-jre-headless
-  - elasticsearch
+  - "{{ 'elasticsearch' if openio_elasticsearch_version == 'latest' else 'elasticsearch=' ~ openio_elasticsearch_version }}"
+  - debianutils
 syslog_user: syslog
 openio_elasticsearch_repo_baseurl:
-  "deb https://artifacts.elastic.co/packages/{{ openio_elasticsearch_version }}/apt stable main"
+  "deb https://artifacts.elastic.co/packages/{{ openio_elasticsearch_repo }}/apt stable main"
 
-openio_elasticsearch_repo_filename: "elasticsearch-{{ openio_elasticsearch_version }}"
+openio_elasticsearch_repo_filename: "elasticsearch-{{ openio_elasticsearch_repo }}"
 
 es_distribution_type: deb
 ...
