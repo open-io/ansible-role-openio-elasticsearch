@@ -46,7 +46,7 @@ openio_elasticsearch_java_args: "-Xms{{ openio_elasticsearch_memory }} -Xmx{{ op
 
 openio_elasticsearch_pid_directory:
   "/run/elasticsearch/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
-openio_elasticsearch_memory: "4096M"
+openio_elasticsearch_memory: "1g"
 
 openio_elasticsearch_http_port: 6400
 openio_elasticsearch_transport_tcp_port: 6450
