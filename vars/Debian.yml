@@ -3,7 +3,7 @@
 ---
 elasticsearch_packages:
   - default-jre-headless
-  - "{{ 'elasticsearch' if openio_elasticsearch_version == 'latest' else 'elasticsearch=' ~ openio_elasticsearch_version }}"
+  #- "{{ 'elasticsearch' if openio_elasticsearch_version == 'latest' else 'elasticsearch=' ~ openio_elasticsearch_version }}"
   - debianutils
 syslog_user: syslog
 openio_elasticsearch_repo_baseurl:
