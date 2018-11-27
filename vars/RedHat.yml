@@ -3,7 +3,6 @@
 ---
 elasticsearch_packages:
   - java-headless
-  - "{{ 'elasticsearch' if openio_elasticsearch_version == 'latest' else 'elasticsearch-' ~ openio_elasticsearch_version }}"
   - which
 syslog_user: openio
 

@@ -3,7 +3,7 @@
 openio_elasticsearch_namespace: "OPENIO"
 openio_elasticsearch_serviceid: "0"
 
-openio_elasticsearch_version: "6.4.3"
+openio_elasticsearch_version: "6.5.1"
 openio_elasticsearch_repo: "6.x"
 openio_elasticsearch_safeguard_version: "com.floragunn:search-guard-6:{{ openio_elasticsearch_version }}-23.2"
 
@@ -22,6 +22,8 @@ openio_elasticsearch_volume:
 openio_elasticsearch_provision_only: false
 
 openio_elasticsearch_ignore_key_error: false
+
+openio_elasticsearch_oss: true
 
 openio_elasticsearch_max_map_count: 262144
 openio_elasticsearch_sysctl:

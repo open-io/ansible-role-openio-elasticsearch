@@ -1,44 +1,63 @@
 ---
-- name: Add Elastic gpg key
-  rpm_key:
-    key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
-    state: present
-  register: add_repository_key
-  ignore_errors: "{{ openio_elasticsearch_ignore_key_error }}"
+- block:
+    - name: Add Elastic gpg key
+      rpm_key:
+        key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+      register: add_repository_key
+      ignore_errors: "{{ openio_elasticsearch_ignore_key_error }}"
 
-- name: Ensure curl is present (on older systems without SNI).
-  package:
-    name: curl
-    state: present
-  when: add_repository_key is failed
+    - name: Ensure curl is present (on older systems without SNI).
+      package:
+        name: curl
+        state: present
+      when: add_repository_key is failed
 
-- name: Add Elasticsearch rpm key (alternative for older systems without SNI).
-  shell: |
-    curl -sSL -o /tmp/GPG-KEY-elasticsearch https://artifacts.elastic.co/GPG-KEY-elasticsearch
-    rpm --import /tmp/GPG-KEY-elasticsearch
-    rm /tmp/GPG-KEY-elasticsearch
-  args:
-    warn: false
-  when: add_repository_key is failed
+    - name: Add Elasticsearch rpm key (alternative for older systems without SNI).
+      shell: |
+        curl -sSL -o /tmp/GPG-KEY-elasticsearch https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        rpm --import /tmp/GPG-KEY-elasticsearch
+        rm /tmp/GPG-KEY-elasticsearch
+      args:
+        warn: false
+      when: add_repository_key is failed
 
-- name: repository installation
-  yum_repository:
-    name: "{{ openio_elasticsearch_repo_filename }}"
-    description: "Elasticsearch {{ openio_elasticsearch_repo }} repository"
-    baseurl: "{{ openio_elasticsearch_repo_baseurl }}"
-    gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
-    gpgcheck: 1
+    - name: repository installation
+      yum_repository:
+        name: "{{ openio_elasticsearch_repo_filename }}"
+        description: "Elasticsearch {{ openio_elasticsearch_repo }} repository"
+        baseurl: "{{ openio_elasticsearch_repo_baseurl }}"
+        gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        gpgcheck: 1
 
-- name: Install packages
-  package:
-    name: "{{ pkg }}"
-    state: present
-  with_items: "{{ elasticsearch_packages }}"
-  loop_control:
-    loop_var: pkg
-  ignore_errors: "{{ ansible_check_mode }}"
-  register: install_packages
-  until: install_packages is success
-  retries: 5
-  delay: 2
+    - name: Install packages
+      package:
+        name: "{{ pkg }}"
+        state: present
+      with_items:
+        - "{{ elasticsearch_packages }}"
+        - "{{ 'elasticsearch-' ~ openio_elasticsearch_version }}"
+      loop_control:
+        loop_var: pkg
+      ignore_errors: "{{ ansible_check_mode }}"
+      register: install_packages
+      until: install_packages is success
+      retries: 5
+      delay: 2
+  when: not openio_elasticsearch_oss
+
+- block:
+    - name: Install OSS package
+      yum:
+        name: "{{ pkg }}"
+      register: install_packages
+      until: install_packages is success
+      retries: 5
+      delay: 2
+      loop_control:
+        loop_var: pkg
+      with_items:
+        - "{{ elasticsearch_packages }}"
+        - "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-{{ openio_elasticsearch_version }}.rpm"
+  when: openio_elasticsearch_oss
 ...
