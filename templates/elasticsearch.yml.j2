@@ -1,5 +1,7 @@
 ---
 # {{ ansible_managed }}
+action.auto_create_index: ".watches,.triggered_watches,.watcher-history-*"
+
 {{ openio_elasticsearch_additional_config | default({}) | combine({
   "cluster.name": openio_elasticsearch_cluster_name,
   "node.name": openio_elasticsearch_node_name,
@@ -8,12 +10,5 @@
   "http.port": openio_elasticsearch_http_port,
   "transport.tcp.port": openio_elasticsearch_transport_tcp_port,
   "path": {"data": openio_elasticsearch_volume, "logs": openio_elasticsearch_log_dir},
-
-  "searchguard.enterprise_modules_enabled": true,
-  "searchguard.ssl.transport.enabled": true,
-  "searchguard.ssl.transport.keystore_filepath": "sgconfig/node-0-keystore.jks",
-  "searchguard.ssl.transport.truststore_filepath": "sgconfig/truststore.jks",
-  "searchguard.ssl.transport.enforce_hostname_verification": false,
-  "searchguard.authcz.admin_dn": ["CN=kirk,OU=client,O=client,L=Test,C=DE"],
 }) | to_nice_yaml }}
 ...

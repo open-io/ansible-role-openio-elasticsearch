@@ -7,20 +7,6 @@
     - "{{ ansible_os_family }}.yml"
   tags: install
 
-- name: Create the 'openio' group
-  group:
-    name: openio
-    gid: "{{ openio_group_openio_gid | default('220')}}"
-  tags: install
-
-- name: Create the 'openio' user
-  user:
-    name: openio
-    comment: "openio account"
-    uid: "{{ openio_user_openio_uid | default('120')}}"
-    group: openio
-  tags: install
-
 - name: "Include {{ ansible_distribution }} tasks"
   include_tasks: "{{ item }}"
   with_first_found:
@@ -50,6 +36,11 @@
   when: not item.stat.exists
   tags: install
 
+- name: Test log directory
+  stat:
+    path: "{{ openio_elasticsearch_log_dir }}"
+  register: _log_dir
+
 - name: Ensure log directory
   file:
     path: "{{ openio_elasticsearch_log_dir }}"
@@ -58,6 +49,7 @@
     group: openio
     mode: 0750
     recurse: true
+  when: not _log_dir.stat.exists
   tags: install
 
 - name: Ensure elasticsearch pid directory is persistant
@@ -90,28 +82,6 @@
         {{ openio_elasticsearch_servicename }}.conf"
   register: _elasticsearch_conf
 
-- name: Copy searchguard files
-  copy:
-    src: searchguard/
-    dest: "{{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}"
-    owner: openio
-    group: openio
-
-- name: Install Safeguard plugin
-  command: "/usr/share/elasticsearch/bin/elasticsearch-plugin install \
-    '{{ openio_elasticsearch_safeguard_version }}' --batch --silent"
-  register: _sg_installed
-  changed_when: _sg_installed.rc == 0
-  failed_when: _sg_installed.rc == 1 and not 'already exists' in _sg_installed.stdout
-  environment:
-    CONF_DIR: "{{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}"
-    ES_PATH_CONF: "{{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}"
-
-- name: Add executable permission to Safeguard Admin shell
-  file:
-    path: /usr/share/elasticsearch/plugins/search-guard-6/tools/sgadmin.sh
-    mode: "+x"
-
 - name: Ensure sysctl.conf settigns
   sysctl:
     name: "{{ item.name }}"
@@ -120,34 +90,53 @@
   with_items: "{{ openio_elasticsearch_sysctl }}"
   when: ansible_virtualization_type != "docker"
 
-- name: restart elasticsearch
+- name: Restart Elasticsearch
   shell: |
     gridinit_cmd reload
-    gridinit_cmd restart  {{openio_elasticsearch_namespace}}-elasticsearch-{{openio_elasticsearch_serviceid}}
+    gridinit_cmd restart {{ openio_elasticsearch_namespace }}-elasticsearch-{{ openio_elasticsearch_serviceid }}
   when:
     - _elasticsearch_conf.changed
     - not openio_elasticsearch_provision_only
-  register: _restart
   tags: configure
 
-- name: Wait for elasticsearch node
+- name: Wait for Elasticsearch to be available
   wait_for:
     host: "{{ openio_elasticsearch_bind_address }}"
-    port: "{{ openio_elasticsearch_transport_tcp_port }}"
-  when: _restart.changed
+    port: "{{ openio_elasticsearch_http_port }}"
+    delay: 10
 
-- name: Configure Safeguard
-  command: "/usr/share/elasticsearch/plugins/search-guard-6/tools/sgadmin.sh \
-    -cd {{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}/sgconfig \
-    -ts {{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}/sgconfig/truststore.jks \
-    -tspass changeit \
-    -ks {{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}/sgconfig/kirk-keystore.jks \
-    -kspass changeit \
-    -h {{ openio_elasticsearch_bind_address }} \
-    -p {{ openio_elasticsearch_transport_tcp_port }} \
-    -nhnv \
-    -icl"
-  changed_when: "'already exists' not in _sgadmin.stdout"
-  register: _sgadmin
-  #environment:
+- name: Check filebeat index
+  uri:
+    url: "http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_http_port }}/oio-filebeat"
+    method: GET
+    status_code:
+      - 200
+      - 404
+  register: fb_index
+
+- name: Provision filebeat lifecycle
+  uri:
+    url: "http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_http_port }}/_ilm/policy/filebeat"
+    method: PUT
+    body: "{{ openio_elasticseach_filebeat_lifecycle | to_json }}"
+    status_code: 200
+    body_format: json
+  when: fb_index.status == 404
+
+- name: Provision filebeat index
+  uri:
+    url: "http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_http_port }}/oio-filebeat"
+    method: PUT
+    body: "{{ lookup('file','filebeat_index.json') }}"
+    status_code: 200
+    body_format: json
+  when: fb_index.status == 404
+
+- name: Provision filebeat ingest pipeline
+  uri:
+    url: "http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_http_port }}/_ingest/pipeline/filebeat"
+    method: PUT
+    body: "{{ lookup('file','filebeat_pipeline.json') }}"
+    status_code: 200
+    body_format: json
 ...

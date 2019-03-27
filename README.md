@@ -12,32 +12,27 @@ An Ansible role for elasticsearch. Specifically, the responsibilities of this ro
 
 ## Role Variables
 
-
-| Variable   | Default | Comments (type)  |
-| :---       | :---    | :---             |
-| `openio_elasticsearch_additional_config` | `{}` | ... |
-| `openio_elasticsearch_bind_address` | `"{{ hostvars[inventory_hostname]['ansible_' + openio_elasticsearch_bind_interface]['ipv4']['address'] }}"` | ... |
-| `openio_elasticsearch_bind_interface` | `"{{ ansible_default_ipv4.alias }}"` | ... |
-| `openio_elasticsearch_cluster_name` | `"{{ openio_elasticsearch_namespace }}-1"` | ... |
-| `openio_elasticsearch_gridinit_dir` | `"/etc/gridinit.d/{{ openio_elasticsearch_namespace }}"` | ... |
-| `openio_elasticsearch_gridinit_file_prefix` | `""` | ... |
-| `openio_elasticsearch_http_port` | `6400` | ... |
-| `openio_elasticsearch_ignore_key_error` | `false` | ... |
-| `openio_elasticsearch_java_args` | `"-Xms{{ openio_elasticsearch_memory }} -Xmx{{ openio_elasticsearch_memory }} \` | ... |
-| `openio_elasticsearch_max_map_count` | `262144` | ... |
-| `openio_elasticsearch_memory` | `"-Xms{{ openio_elasticsearch_memory }} -Xmx{{ openio_elasticsearch_memory }} \ "4096M"` | ... |
-| `openio_elasticsearch_namespace` | `"OPENIO"` | ... |
-| `openio_elasticsearch_node_name` | `"{{ ansible_hostname }}"` | ... |
-| `openio_elasticsearch_pid_directory` | `/run/elasticsearch/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}` | ... |
-| `openio_elasticsearch_provision_only` | `false` | ... |
-| `openio_elasticsearch_repo` | `"6.x"` | ... |
-| `openio_elasticsearch_safeguard_version` | `com.floragunn:search-guard-6:{{ openio_elasticsearch_version }}-23.2` | ... |
-| `openio_elasticsearch_serviceid` | `0` | ... |
-| `openio_elasticsearch_sysctl` | `` | ... |
-| `openio_elasticsearch_transport_tcp_port` | `6450` | ... |
-| `openio_elasticsearch_version` | `"6.4.3"` | ... |
-| `openio_elasticsearch_volume` | `/var/lib/oio/sds/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}` | ... |
-
+| Name                                      | Type    | Description                             |
+| ----------------------------------------- | ------- | --------------------------------------- |
+| openio_elasticsearch_namespace            | string  | OpenIO namespace for Elasticsearch      |
+| openio_elasticsearch_serviceid            | string  | Elasticsearch service id                |
+| openio_elasticsearch_gridinit_dir         | string  | Path to gridinit directory              |
+| openio_elasticsearch_gridinit_file_prefix | string  | Gridinit unit file prefix               |
+| openio_elasticsearch_bind_interface       | string  | Interface to bind to                    |
+| openio_elasticsearch_bind_address         | string  | IP address to listen on                 |
+| openio_elasticsearch_http_port            | integer | HTTP port to listen on                  |
+| openio_elasticsearch_transport_tcp_port   | integer | TCP port to listen on                   |
+| openio_elasticsearch_cluster_name         | string  | ES cluster name                         |
+| openio_elasticsearch_node_name            | string  | ES node name                            |
+| openio_elasticsearch_volume               | string  | path to volume used to store index data |
+| openio_elasticsearch_provision_only       | string  | Provision only, without restarting      |
+| openio_elasticsearch_version              | string  | ES version                              |
+| openio_elasticsearch_sysctl               | dict    | Sysctl options to apply                 |
+| openio_elasticsearch_java_args            | string  | ES java args                            |
+| openio_elasticsearch_pid_directory        | string  | Path to ES pid directory                |
+| openio_elasticsearch_memory               | string  | Amount of RAM to allocate to ES JVM     |
+| openio_elasticsearch_additional_config    | dict    | Additional ES config options            |
+| openio_elasticseach_filebeat_lifecycle    | dict    | Lifecycle policy for filebeat index     |
 
 ## Dependencies
 
@@ -45,26 +40,8 @@ No dependencies.
 
 ## Example Playbook
 
-```yaml
-- hosts: localhost
-  become: true
-  vars:
-    NS: OPENIO
-  roles:
-    - role: repo
-    - role: gridinit
-      openio_gridinit_namespace: "{{ NS }}"
-      openio_gridinit_per_ns: true
-    - role: role_under_test
-      openio_elasticsearch_namespace: "{{ NS }}"
-      openio_elasticsearch_bind_address: "{{ ansible_default_ipv4.address }}"
-```
+[Example playbook](docker-tests/test.yml)
 
-
-```ini
-[all]
-node1 ansible_host=192.168.1.173
-```
 
 ## Contributing
 
