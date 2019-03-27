@@ -1,67 +1,44 @@
 ---
-- block:
-    - name: Add Elastic gpg key
-      apt_key:
-        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
-        state: present
-      register: add_repository_key
-      ignore_errors: "{{ openio_elasticsearch_ignore_key_error }}"
+- name: Add Elastic gpg key
+  apt_key:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    state: present
+  register: add_repository_key
+  ignore_errors: true
 
-    - name: Ensure curl is present (on older systems without SNI).
-      package:
-        name: curl
-        state: present
-      when: add_repository_key is failed
+- name: Ensure curl is present (on older systems without SNI).
+  package:
+    name: curl
+    state: present
+  when: add_repository_key is failed
 
-    - name: Add Elasticsearch apt key (alternative for older systems without SNI).
-      shell: "curl -sSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -"
-      args:
-        warn: false
-      when: add_repository_key is failed
+- name: Add Elasticsearch apt key (alternative for older systems without SNI).
+  shell: "set -o pipefail; curl -sSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -"
+  args:
+    warn: false
+  when: add_repository_key is failed
 
-    - name: Check that HTTPS transport is available to APT
-      apt:
-        name: apt-transport-https
-        state: present
+- name: Check that HTTPS transport is available to APT
+  apt:
+    name: apt-transport-https
+    state: present
 
-    - name: repository installation
-      apt_repository:
-        filename: "{{ openio_elasticsearch_repo_filename }}"
-        repo: "{{ openio_elasticsearch_repo_baseurl }}"
-        update_cache: true
+- name: repository installation
+  apt_repository:
+    filename: "{{ openio_elasticsearch_repo_filename }}"
+    repo: "{{ openio_elasticsearch_repo_baseurl }}"
+    update_cache: true
 
-    - name: Install packages
-      package:
-        name: "{{ pkg }}"
-        state: present
-      with_items:
-        - "{{ elasticsearch_packages }}"
-        - "{{ 'elasticsearch=' ~ openio_elasticsearch_version }}"
-      loop_control:
-        loop_var: pkg
-      ignore_errors: "{{ ansible_check_mode }}"
-      register: install_packages
-      until: install_packages is success
-      retries: 5
-      delay: 2
-  when: not openio_elasticsearch_oss
-
-- block:
-    - name: Download OSS package
-      get_url:
-        url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-{{ openio_elasticsearch_version }}.deb"
-        dest: "/tmp/elasticsearch-oss-{{ openio_elasticsearch_version }}.deb"
-      register: download_packages
-      until: download_packages is success
-      retries: 5
-      delay: 2
-
-    - name: Install OSS package
-      apt:
-        deb: "/tmp/elasticsearch-oss-{{ openio_elasticsearch_version }}.deb"
-      register: install_packages
-      until: install_packages is success
-      retries: 5
-      delay: 2
-  when: openio_elasticsearch_oss
+- name: Install packages
+  package:
+    name: "{{ pkg }}"
+    state: present
+  with_items: "{{ elasticsearch_packages }}"
+  loop_control:
+    loop_var: pkg
+  ignore_errors: "{{ ansible_check_mode }}"
+  register: install_packages
+  until: install_packages is success
+  retries: 5
+  delay: 2
 ...

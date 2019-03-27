@@ -3,11 +3,11 @@
 ---
 elasticsearch_packages:
   - java-headless
-  - which
+  - elasticsearch
 syslog_user: openio
 
-openio_elasticsearch_repo_filename: "elasticsearch-{{ openio_elasticsearch_repo }}"
-openio_elasticsearch_repo_baseurl: "https://artifacts.elastic.co/packages/{{ openio_elasticsearch_repo }}/yum"
+openio_elasticsearch_repo_filename: "elasticsearch-{{ openio_elasticsearch_version }}"
+openio_elasticsearch_repo_baseurl: "https://artifacts.elastic.co/packages/{{ openio_elasticsearch_version }}/yum"
 
 es_distribution_type: rpm
 ...

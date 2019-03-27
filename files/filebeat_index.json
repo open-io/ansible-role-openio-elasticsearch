@@ -1,0 +1,87 @@
+{
+    "mappings": {
+        "doc": {
+            "properties": {
+                "@timestamp": {
+                    "type": "date"
+                },
+                "oio_bytes_received": {
+                    "type": "integer"
+                },
+                "oio_bytes_sent": {
+                    "type": "integer"
+                },
+                "oio_host": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_local_addr": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_loglevel": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_m2_base": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_method": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_remote_addr": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_resp_time": {
+                    "type": "integer"
+                },
+                "oio_resp_time_ms": {
+                    "type": "scaled_float",
+                    "scaling_factor": 1000
+                },
+                "oio_service": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_size": {
+                    "type": "integer"
+                },
+                "oio_status": {
+                    "type": "short"
+                },
+                "oio_swift_source": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_txid": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_url": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                },
+                "oio_user_agent": {
+                    "ignore_above": 1024,
+                    "type": "keyword"
+                }
+            }
+        }
+    },
+    "settings": {
+        "index": {
+            "mapping": {
+                "total_fields": {
+                    "limit": "10000"
+                }
+            },
+            "lifecycle.name": "filebeat",
+            "number_of_replicas": "1",
+            "number_of_shards": "5",
+            "refresh_interval": "5s"
+        }
+    }
+}

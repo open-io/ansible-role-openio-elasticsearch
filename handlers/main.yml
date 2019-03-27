@@ -1,8 +1,0 @@
-# roles/elasticsearch/handlers/main.yml
----
-#- name: restart elasticsearch
-#  service:
-#    name: "{{ elasticsearch_service }}"
-#    state: restarted
-#
-...

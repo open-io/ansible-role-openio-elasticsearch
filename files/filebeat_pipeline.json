@@ -1,0 +1,26 @@
+{
+  "description" : "Filebeat ingestion",
+  "processors" : [
+    {
+      "set" : {
+        "if": "ctx.oio_bytes_received == '-'",
+        "field": "oio_bytes_received",
+        "value": 0
+      }
+    },
+    {
+      "set" : {
+        "if": "ctx.oio_bytes_sent == '-'",
+        "field": "oio_bytes_sent",
+        "value": 0
+      }
+    },
+    {
+      "script": {
+        "if": "ctx.oio_service == 'oioswift'",
+        "lang": "painless",
+        "source": "ctx.oio_resp_time = Float.parseFloat(ctx.oio_resp_time_ms) * 1000000"
+      }
+    }
+  ]
+}

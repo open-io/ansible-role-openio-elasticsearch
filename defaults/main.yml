@@ -3,10 +3,6 @@
 openio_elasticsearch_namespace: "OPENIO"
 openio_elasticsearch_serviceid: "0"
 
-openio_elasticsearch_version: "6.5.1"
-openio_elasticsearch_repo: "6.x"
-openio_elasticsearch_safeguard_version: "com.floragunn:search-guard-6:{{ openio_elasticsearch_version }}-23.2"
-
 openio_elasticsearch_gridinit_dir: "/etc/gridinit.d/{{ openio_elasticsearch_namespace }}"
 openio_elasticsearch_gridinit_file_prefix: ""
 
@@ -21,14 +17,12 @@ openio_elasticsearch_volume:
   "/var/lib/oio/sds/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
 openio_elasticsearch_provision_only: false
 
-openio_elasticsearch_ignore_key_error: false
+openio_elasticsearch_version: "6.x"
 
-openio_elasticsearch_oss: true
-
-openio_elasticsearch_max_map_count: 262144
 openio_elasticsearch_sysctl:
   - name: vm.max_map_count
     value: 262144
+
 openio_elasticsearch_java_args: "-Xms{{ openio_elasticsearch_memory }} -Xmx{{ openio_elasticsearch_memory }} \
   -XX:+UseConcMarkSweepGC \
   -XX:CMSInitiatingOccupancyFraction=75 \
@@ -48,10 +42,19 @@ openio_elasticsearch_java_args: "-Xms{{ openio_elasticsearch_memory }} -Xmx{{ op
 
 openio_elasticsearch_pid_directory:
   "/run/elasticsearch/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
-openio_elasticsearch_memory: "1g"
+openio_elasticsearch_memory: "1024M"
 
 openio_elasticsearch_http_port: 6400
 openio_elasticsearch_transport_tcp_port: 6450
 
 openio_elasticsearch_additional_config: {}
+
+# See: https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-index-lifecycle-management.html
+openio_elasticseach_filebeat_lifecycle:
+  policy:
+    phases:
+      delete:
+        min_age: 30d
+        actions:
+          delete: {}
 ...
