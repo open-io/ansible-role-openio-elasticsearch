@@ -14,42 +14,21 @@
     - "{{ ansible_os_family }}.yml"
   tags: install
 
-- name: Test directories presence
-  stat:
-    path: "{{ item }}"
-  register: _dir
-  with_items:
-    - "/etc/gridinit.d/{{ openio_elasticsearch_namespace }}"
-    - "{{ openio_elasticsearch_sysconfig_dir }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
-    - "{{ openio_elasticsearch_volume }}"
-    - "{{ openio_elasticsearch_pid_directory }}"
-
 - name: Ensure directories exists
   file:
-    path: "{{ item.item }}"
+    path: "{{ item.path }}"
     state: directory
-    owner: openio
-    group: openio
-    mode: 0755
-    recurse: true
-  with_items: "{{ _dir.results }}"
-  when: not item.stat.exists
-  tags: install
-
-- name: Test log directory
-  stat:
-    path: "{{ openio_elasticsearch_log_dir }}"
-  register: _log_dir
-
-- name: Ensure log directory
-  file:
-    path: "{{ openio_elasticsearch_log_dir }}"
-    state: directory
-    owner: "{{ syslog_user }}"
-    group: openio
-    mode: 0750
-    recurse: true
-  when: not _log_dir.stat.exists
+    owner: "{{ item.owner | default('openio') }}"
+    group: "{{ item.group | default('openio') }}"
+    mode: "{{ item.mode | default(0755) }}"
+  with_items:
+    - path: "/etc/gridinit.d/{{ openio_elasticsearch_namespace }}"
+    - path: "{{ openio_elasticsearch_sysconfig_dir }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
+    - path: "{{ openio_elasticsearch_volume }}"
+    - path: "{{ openio_elasticsearch_pid_directory }}"
+    - path: "{{ openio_elasticsearch_log_dir }}"
+      owner: "{{ syslog_user }}"
+      mode: "0770"
   tags: install
 
 - name: Ensure elasticsearch pid directory is persistant
@@ -60,8 +39,8 @@
     owner: openio
     group: openio
     mode: 0644
-  tags: install
   when: openio_elasticsearch_pid_directory.split(' ')[0] | dirname is match("/run/.*")
+  tags: configure
 
 - name: Generate configuration files
   template:
@@ -81,6 +60,7 @@
       dest: "{{ openio_elasticsearch_gridinit_dir }}/{{ openio_elasticsearch_gridinit_file_prefix }}\
         {{ openio_elasticsearch_servicename }}.conf"
   register: _elasticsearch_conf
+  tags: configure
 
 - name: Ensure sysctl.conf settigns
   sysctl:
@@ -89,6 +69,7 @@
     state: "{{ item.state | default('present') }}"
   with_items: "{{ openio_elasticsearch_sysctl }}"
   when: ansible_virtualization_type != "docker"
+  tags: configure
 
 - name: Restart Elasticsearch
   shell: |
@@ -104,6 +85,7 @@
     host: "{{ openio_elasticsearch_bind_address }}"
     port: "{{ openio_elasticsearch_http_port }}"
     delay: 10
+  tags: configure
 
 - name: Check filebeat index
   uri:
@@ -113,6 +95,7 @@
       - 200
       - 404
   register: fb_index
+  tags: configure
 
 - name: Provision filebeat lifecycle
   uri:
@@ -121,7 +104,9 @@
     body: "{{ openio_elasticseach_filebeat_lifecycle | to_json }}"
     status_code: 200
     body_format: json
-  when: fb_index.status == 404
+  when:
+    - fb_index.status == 404
+  tags: configure
 
 - name: Provision filebeat index
   uri:
@@ -130,13 +115,16 @@
     body: "{{ lookup('file','filebeat_index.json') }}"
     status_code: 200
     body_format: json
-  when: fb_index.status == 404
+  when:
+    - fb_index.status == 404
+  tags: configure
 
 - name: Provision filebeat ingest pipeline
   uri:
     url: "http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_http_port }}/_ingest/pipeline/filebeat"
     method: PUT
-    body: "{{ lookup('file','filebeat_pipeline.json') }}"
+    body: "{{ lookup('file', 'filebeat_pipeline.json') }}"
     status_code: 200
     body_format: json
+  tags: configure
 ...

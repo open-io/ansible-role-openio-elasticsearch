@@ -2,6 +2,8 @@
 openio_elasticsearch_sysconfig_dir: "/etc/oio/sds/{{ openio_elasticsearch_namespace }}"
 openio_elasticsearch_servicename: "elasticsearch-{{ openio_elasticsearch_serviceid }}"
 
+openio_elasticsearch_version: "6.x"
+
 openio_elasticsearch_definition_file: >
   "{{ openio_elasticsearch_sysconfig_dir }}/
   {{ openio_elasticsearch_servicename }}/{{ openio_elasticsearch_servicename }}.conf"
