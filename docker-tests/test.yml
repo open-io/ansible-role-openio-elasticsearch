@@ -3,16 +3,23 @@
 - hosts: localhost
   become: true
   vars:
-    NS: TRAVIS
+    namespace: TRAVIS
+  pre_tasks:
+    - name: Add localhost to group 'elasticsearch'
+      add_host:
+        name: localhost
+        groups: elasticsearch
+        openio_bind_mgmt_address: '{{ ansible_default_ipv4.address }}'
+      changed_when: false
   roles:
     - role: repo
       openio_repository_no_log: false
       openio_repository_mirror_host: mirror2.openio.io
     - role: users
     - role: gridinit
-      openio_gridinit_namespace: "{{ NS }}"
+      openio_gridinit_namespace: "{{ namespace }}"
       openio_gridinit_per_ns: true
     - role: role_under_test
-      openio_elasticsearch_namespace: "{{ NS }}"
+      openio_elasticsearch_namespace: "{{ namespace }}"
       openio_elasticsearch_memory: 512M
 ...

@@ -2,24 +2,84 @@
   "description" : "Filebeat ingestion",
   "processors" : [
     {
-      "set" : {
-        "if": "ctx.oio_bytes_received == '-'",
-        "field": "oio_bytes_received",
-        "value": 0
+      "remove" : {
+        "if": "ctx.oio_remote_addr== '-'",
+        "field": "oio_remote_addr"
       }
     },
     {
-      "set" : {
-        "if": "ctx.oio_bytes_sent == '-'",
-        "field": "oio_bytes_sent",
-        "value": 0
+      "remove" : {
+        "if": "ctx.oio_req_size == '-'",
+        "field": "oio_req_size"
+      }
+    },
+    {
+      "remove" : {
+        "if": "ctx.oio_resp_size == '-'",
+        "field": "oio_resp_size"
+      }
+    },
+    {
+      "remove" : {
+        "if": "ctx.oio_resp_time == '-'",
+        "ignore_missing": true,
+        "field": "oio_resp_time"
+      }
+    },
+    {
+      "remove" : {
+        "if": "ctx.oio_swift_s3_op == '-'",
+        "ignore_missing": true,
+        "field": "oio_swift_s3_op"
+      }
+    },
+    {
+      "remove" : {
+        "if": "ctx.oio_swift_source == '-'",
+        "ignore_missing": true,
+        "field": "oio_swift_source"
+      }
+    },
+    {
+      "remove" : {
+        "if": "ctx.oio_policy_index == '-'",
+        "ignore_missing": true,
+        "field": "oio_policy_index"
+      }
+    },
+    {
+      "remove" : {
+        "if": "ctx.oio_txid == '-'",
+        "ignore_missing": true,
+        "field": "oio_txid"
+      }
+    },
+    {
+      "gsub": {
+        "ignore_missing": true,
+        "field": "oio_req_start_time",
+        "pattern": "\\.(\\d{3})\\d{6}$",
+        "replacement": "$1"
+      }
+    },
+    {
+      "gsub": {
+        "ignore_missing": true,
+        "field": "oio_req_end_time",
+        "pattern": "\\.(\\d{3})\\d{6}$",
+        "replacement": "$1"
       }
     },
     {
       "script": {
-        "if": "ctx.oio_service == 'oioswift'",
-        "lang": "painless",
-        "source": "ctx.oio_resp_time = Float.parseFloat(ctx.oio_resp_time_ms) * 1000000"
+        "if": "ctx.oio_resp_time_us != null",
+        "source": "ctx.oio_resp_time = Double.parseDouble(ctx.oio_resp_time_us) / 1000000.0"
+      }
+    },
+    {
+      "remove" : {
+        "ignore_missing": true,
+        "field": "oio_resp_time_us"
       }
     }
   ]
