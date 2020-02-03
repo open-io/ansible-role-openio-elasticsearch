@@ -1,23 +1,37 @@
 # roles/elasticsearch/defaults/main.yml
 ---
-openio_elasticsearch_namespace: "OPENIO"
+openio_elasticsearch_namespace: "{{ namespace | default('OPENIO') }}"
+
 openio_elasticsearch_serviceid: "0"
+openio_elasticsearch_volume:
+  "/var/lib/oio/sds/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
 
 openio_elasticsearch_gridinit_dir: "/etc/gridinit.d/{{ openio_elasticsearch_namespace }}"
 openio_elasticsearch_gridinit_file_prefix: ""
 
 openio_elasticsearch_bind_interface: "{{ ansible_default_ipv4.alias }}"
-openio_elasticsearch_bind_address:
-  "{{ hostvars[inventory_hostname]['ansible_' + openio_elasticsearch_bind_interface]['ipv4']['address'] }}"
+openio_elasticsearch_bind_address: "{{ openio_bind_mgmt_address
+  | d(hostvars[inventory_hostname]['ansible_' + openio_elasticsearch_bind_interface]['ipv4']['address']) }}"
+openio_elasticsearch_bind_port: "{{ default_openio_elasticsearch_global_bind_port | d(6900) }}"
+openio_elasticsearch_transport_port: "{{ default_openio_elasticsearch_global_transport_port | d(6901) }}"
+
+openio_elasticsearch_provision_only: false
+openio_elasticsearch_nodes_group: "elasticsearch"
+openio_elasticsearch_bootstrap_node:
+  "{{ groups[openio_elasticsearch_nodes_group][0] if openio_elasticsearch_nodes_group in groups }}"
+
+openio_elasticsearch_cluster_hosts: "{{ (groups[openio_elasticsearch_nodes_group] \
+  | map('extract', hostvars, ['openio_bind_mgmt_address']) \
+  | map('regex_replace', '$', ':' ~ openio_elasticsearch_transport_port) \
+  | list | unique) if openio_elasticsearch_nodes_group in groups \
+  else [] }}"
+openio_elasticsearch_cluster_nodes: "{{ (groups[openio_elasticsearch_nodes_group] \
+  | map('extract', hostvars, ['ansible_hostname']) \
+  | list | unique) if openio_elasticsearch_nodes_group in groups \
+  else [] }}"
 
 openio_elasticsearch_cluster_name: "{{ openio_elasticsearch_namespace }}-1"
 openio_elasticsearch_node_name: "{{ ansible_hostname }}"
-
-openio_elasticsearch_volume:
-  "/var/lib/oio/sds/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
-openio_elasticsearch_provision_only: false
-
-openio_elasticsearch_version: "6.x"
 
 openio_elasticsearch_sysctl:
   - name: vm.max_map_count
@@ -40,12 +54,7 @@ openio_elasticsearch_java_args: "-Xms{{ openio_elasticsearch_memory }} -Xmx{{ op
   -Dlog4j.shutdownHookEnabled=false \
   -Dlog4j2.disable.jmx=true"
 
-openio_elasticsearch_pid_directory:
-  "/run/elasticsearch/{{ openio_elasticsearch_namespace }}/elasticsearch-{{ openio_elasticsearch_serviceid }}"
 openio_elasticsearch_memory: "1024M"
-
-openio_elasticsearch_http_port: 6400
-openio_elasticsearch_transport_tcp_port: 6450
 
 openio_elasticsearch_additional_config: {}
 

@@ -1,87 +1,117 @@
 {
-    "mappings": {
-        "doc": {
-            "properties": {
-                "@timestamp": {
-                    "type": "date"
-                },
-                "oio_bytes_received": {
-                    "type": "integer"
-                },
-                "oio_bytes_sent": {
-                    "type": "integer"
-                },
-                "oio_host": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_local_addr": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_loglevel": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_m2_base": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_method": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_remote_addr": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_resp_time": {
-                    "type": "integer"
-                },
-                "oio_resp_time_ms": {
-                    "type": "scaled_float",
-                    "scaling_factor": 1000
-                },
-                "oio_service": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_size": {
-                    "type": "integer"
-                },
-                "oio_status": {
-                    "type": "short"
-                },
-                "oio_swift_source": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_txid": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_url": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                },
-                "oio_user_agent": {
-                    "ignore_above": 1024,
-                    "type": "keyword"
-                }
-            }
-        }
-    },
-    "settings": {
-        "index": {
-            "mapping": {
-                "total_fields": {
-                    "limit": "10000"
-                }
-            },
-            "lifecycle.name": "filebeat",
-            "number_of_replicas": "1",
-            "number_of_shards": "5",
-            "refresh_interval": "5s"
-        }
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "oio_client_ip": {
+        "ignore_above": 128,
+        "type": "keyword"
+      },
+      "oio_host": {
+        "ignore_above": 64,
+        "type": "keyword"
+      },
+      "oio_local_addr": {
+        "type": "ip"
+      },
+      "oio_local_port": {
+        "type": "integer"
+      },
+      "oio_loglevel": {
+        "ignore_above": 16,
+        "type": "keyword"
+      },
+      "oio_method": {
+        "ignore_above": 16,
+        "type": "keyword"
+      },
+      "oio_namespace": {
+        "ignore_above": 32,
+        "type": "keyword"
+      },
+      "oio_playload": {
+        "ignore_above": 1024,
+        "type": "keyword"
+      },
+      "oio_policy_index": {
+        "ignore_above": 32,
+        "type": "keyword"
+      },
+      "oio_process_id": {
+        "type": "integer"
+      },
+      "oio_remote_addr": {
+        "type": "ip"
+      },
+      "oio_remote_port": {
+        "type": "integer"
+      },
+      "oio_req_end_time": {
+        "type": "date"
+      },
+      "oio_req_size": {
+        "type": "long"
+      },
+      "oio_req_start_time": {
+        "type": "date"
+      },
+      "oio_resp_size": {
+        "type": "long"
+      },
+      "oio_resp_time": {
+        "type": "double"
+      },
+      "oio_resp_time_us": {
+        "type": "long"
+      },
+      "oio_service": {
+        "ignore_above": 32,
+        "type": "keyword"
+      },
+      "oio_service_id": {
+        "type": "integer"
+      },
+      "oio_status": {
+        "type": "short"
+      },
+      "oio_swift_s3_op": {
+        "ignore_above": 128,
+        "type": "keyword"
+      },
+      "oio_swift_source": {
+        "ignore_above": 8,
+        "type": "keyword"
+      },
+      "oio_thread_id": {
+        "ignore_above": 8,
+        "type": "keyword"
+      },
+      "oio_txid": {
+        "ignore_above": 64,
+        "type": "keyword"
+      },
+      "oio_url": {
+        "ignore_above": 1024,
+        "type": "keyword"
+      },
+      "oio_user_agent": {
+        "ignore_above": 1024,
+        "type": "keyword"
+      }
     }
+  },
+  "settings": {
+    "index": {
+      "mapping": {
+        "total_fields": {
+          "limit": "10000"
+        }
+      },
+      "lifecycle.name": "filebeat",
+      "number_of_replicas": "1",
+      "number_of_shards": "5",
+      "refresh_interval": "5s"
+    }
+  }
 }
