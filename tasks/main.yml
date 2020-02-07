@@ -100,6 +100,7 @@
   tags: configure
   when:
     - not openio_elasticsearch_provision_only
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Check filebeat index
   uri:
@@ -113,6 +114,7 @@
   when:
     - not openio_elasticsearch_provision_only
     - inventory_hostname == openio_elasticsearch_bootstrap_node
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Provision filebeat lifecycle
   uri:
@@ -126,6 +128,7 @@
     - inventory_hostname == openio_elasticsearch_bootstrap_node
     - not openio_elasticsearch_provision_only
     - fb_index.status == 404
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Provision filebeat index
   uri:
@@ -139,6 +142,7 @@
     - inventory_hostname == openio_elasticsearch_bootstrap_node
     - not openio_elasticsearch_provision_only
     - fb_index.status == 404
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Provision filebeat ingest pipeline
   uri:
@@ -151,4 +155,5 @@
   when:
     - not openio_elasticsearch_provision_only
     - inventory_hostname == openio_elasticsearch_bootstrap_node
+  ignore_errors: "{{ ansible_check_mode }}"
 ...
