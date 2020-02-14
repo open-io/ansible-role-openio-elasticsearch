@@ -1,4 +1,3 @@
-# roles/elasticsearch/defaults/main.yml
 ---
 openio_elasticsearch_namespace: "{{ namespace | default('OPENIO') }}"
 
@@ -66,4 +65,18 @@ openio_elasticseach_filebeat_lifecycle:
         min_age: 30d
         actions:
           delete: {}
+
+openio_elasticsearch_servicename: "elasticsearch-{{ openio_elasticsearch_serviceid }}"
+openio_elasticsearch_log_dir:
+  "/var/log/oio/sds/{{ openio_elasticsearch_namespace }}/{{ openio_elasticsearch_servicename }}"
+openio_elasticsearch_sysconfig_dir:
+  "/etc/oio/sds/{{ openio_elasticsearch_namespace }}/{{ openio_elasticsearch_servicename }}"
+openio_elasticsearch_pid_directory: "/run/oio/sds/{{ openio_elasticsearch_namespace }}"
+openio_elasticsearch_definition_file: >
+  "{{ openio_elasticsearch_sysconfig_dir }}/
+  {{ openio_elasticsearch_servicename }}/{{ openio_elasticsearch_servicename }}.conf"
+openio_elasticsearch_classpath:
+  - "{{ openio_elasticsearch_sysconfig_dir }}/{{ openio_elasticsearch_servicename }}"
+  - /usr/share/elasticsearch/lib/*
+openio_elasticsearch_url: "http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_bind_port }}"
 ...
