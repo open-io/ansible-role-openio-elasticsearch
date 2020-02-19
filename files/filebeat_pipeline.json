@@ -72,6 +72,12 @@
     },
     {
       "script": {
+        "if": "ctx.oio_local_addr != null && ctx.oio_local_port != null",
+        "source": "ctx.oio_service_id = ctx.oio_local_addr + ':' + ctx.oio_local_port"
+      }
+    },
+    {
+      "script": {
         "if": "ctx.oio_resp_time_us != null",
         "source": "ctx.oio_resp_time = Double.parseDouble(ctx.oio_resp_time_us) / 1000000.0"
       }
