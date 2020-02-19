@@ -87,6 +87,12 @@
         "ignore_missing": true,
         "field": "oio_resp_time_us"
       }
+    },
+    {
+      "script": {
+        "if": "ctx.oio_req_start_time == null && ctx.oio_resp_time != null",
+        "source": "ctx.oio_req_start_time = Instant.ofEpochMilli(ZonedDateTime.parse(ctx['@timestamp']).toInstant().toEpochMilli() - (long)(ctx.oio_resp_time*1000))"
+      }
     }
   ]
 }
