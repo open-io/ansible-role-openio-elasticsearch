@@ -74,6 +74,10 @@
         "type": "keyword"
       },
       "oio_service_id": {
+        "ignore_above": 32,
+        "type": "keyword"
+      },
+      "oio_service_index": {
         "type": "integer"
       },
       "oio_status": {
