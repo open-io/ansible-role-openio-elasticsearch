@@ -1,159 +1,77 @@
-# roles/elasticsearch/tasks/main.yml
 ---
-- name: "Include {{ ansible_distribution }} variables"
-  include_vars: "{{ item }}"
-  with_first_found:
-    - "{{ ansible_distribution }}.yml"
-    - "{{ ansible_os_family }}.yml"
-  tags:
-    - install
-    - configure
+- include_role:
+    name: openio-service
+  vars:
+    openio_service_type: "oio-elasticsearch"
+    openio_service_namespace: "{{ openio_elasticsearch_namespace }}"
+    openio_service_maintenance_mode: "{{ openio_elasticsearch_maintenance_mode }}"
+    openio_service_packages:
+      - oio-elasticsearch
+    openio_service_directories:
+      - path: "{{ openio_service_volume }}"
+    openio_service_configuration_files:
+      - name: elasticsearch.yml
+      - name: log4j2.properties
+    openio_service_sysctl_entries: "{{ openio_elasticsearch_sysctl }}"
 
-- name: "Include {{ ansible_distribution }} tasks"
-  include_tasks: "{{ item }}"
-  with_first_found:
-    - "{{ ansible_distribution }}.yml"
-    - "{{ ansible_os_family }}.yml"
-  tags: install
+    openio_service_services:
+      - command: >-
+          /usr/bin/java {{ openio_elasticsearch_java_args }}
+          -Des.path.conf={{openio_service_conf_dir}}
+          -Des.path.home=/usr/share/oio-elasticsearch
+          -cp "{{ openio_elasticsearch_classpath | join(':') }}"
+          org.elasticsearch.bootstrap.Elasticsearch
 
-- name: "Stop/disable default instance"
-  service:
-    name: elasticsearch
-    state: stopped
-    enabled: false
-  tags: install
+    openio_service_checks:
+      - uri:
+          url: "{{ openio_elasticsearch_url }}/_cluster/health"
+        until: "'json' in _return and _return.json.cluster_name | d('nok') == openio_elasticsearch_cluster_name"
+        retries: 30
+        delay: 2
 
-- name: Create directories
-  file:
-    path: "{{ item.name }}"
-    state: "{{ item.state | d('directory') }}"
-    owner: "{{ item.owner | d('openio') }}"
-    group: "{{ item.group | d('openio') }}"
-    mode: "{{ item.mode | d('0755') }}"
-    recurse: "{{ item.recurse | d(false) | bool }}"
-  with_items:
-    - name: "{{ openio_elasticsearch_gridinit_dir }}"
-    - name: "{{ openio_elasticsearch_sysconfig_dir }}"
-    - name: "{{ openio_elasticsearch_volume }}"
-    - name: "{{ openio_elasticsearch_pid_directory }}"
-    - name: "{{ openio_elasticsearch_log_dir }}"
-      mode: "0750"
-  tags: install
+- name: bootstrap elasticsearch
+  block:
 
-- name: Ensure elasticsearch pid directory is persistant
-  lineinfile:
-    dest: /etc/tmpfiles.d/elasticsearch.conf
-    create: true
-    line: "d {{ openio_elasticsearch_pid_directory }} 755 openio openio -"
-    owner: openio
-    group: openio
-    mode: 0644
-  tags: configure
-  when: openio_elasticsearch_pid_directory.split(' ')[0] | dirname is match("/run/.*")
+    - name: Check filebeat index
+      uri:
+        url: "{{ openio_elasticsearch_url }}/oio-filebeat"
+        method: GET
+        status_code:
+          - 200
+          - 404
+      register: fb_index
 
-- name: Generate configuration files
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: openio
-    group: openio
-    mode: 0644
-  with_items:
-    - src: "log4j2.properties.j2"
-      dest: "{{ openio_elasticsearch_sysconfig_dir }}/log4j2.properties"
-    - src: "elasticsearch.yml.j2"
-      dest: "{{ openio_elasticsearch_sysconfig_dir }}/elasticsearch.yml"
-    - src: "gridinit_elasticsearch.conf.j2"
-      dest: "{{ openio_elasticsearch_gridinit_dir }}/{{ openio_elasticsearch_gridinit_file_prefix }}\
-        {{ openio_elasticsearch_servicename }}.conf"
-  register: _elasticsearch_conf
-  tags: configure
+    - name: Provision filebeat lifecycle
+      uri:
+        url: "{{ openio_elasticsearch_url }}/_ilm/policy/oio-filebeat"
+        method: PUT
+        body: "{{ openio_elasticseach_filebeat_lifecycle | to_json }}"
+        status_code: 200
+        body_format: json
+      when:
+        - fb_index.status == 404
 
-- name: Ensure sysctl.conf settigns
-  sysctl:
-    name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    state: "{{ item.state | default('present') }}"
-  with_items: "{{ openio_elasticsearch_sysctl }}"
-  when: ansible_virtualization_type != "docker"
-  tags: configure
+    - name: Provision filebeat index
+      uri:
+        url: "{{ openio_elasticsearch_url }}/oio-filebeat"
+        method: PUT
+        body: "{{ lookup('file','indexes/oio-filebeat.json') }}"
+        status_code: 200
+        body_format: json
+      when:
+        - fb_index.status == 404
 
-- name: Restart Elasticsearch
-  shell: |
-    gridinit_cmd reload
-    gridinit_cmd restart {{ openio_elasticsearch_namespace }}-elasticsearch-{{ openio_elasticsearch_serviceid }}
-  when:
-    - _elasticsearch_conf.changed
-    - not openio_elasticsearch_provision_only
-  tags: configure
+    - name: Provision filebeat ingest pipeline
+      uri:
+        url: "{{ openio_elasticsearch_url }}/_ingest/pipeline/oio-filebeat"
+        method: PUT
+        body: "{{ lookup('file','pipelines/oio-filebeat.json') }}"
+        status_code: 200
+        body_format: json
 
-- name: Wait for Elasticsearch to be available
-  wait_for:
-    host: "{{ openio_elasticsearch_bind_address }}"
-    port: "{{ openio_elasticsearch_bind_port }}"
-    timeout: 1
-  register: _elasticsearch_check
-  retries: 15
-  delay: 1
-  until: _elasticsearch_check is success
-  changed_when: false
   tags: configure
   when:
-    - not openio_elasticsearch_provision_only
-  ignore_errors: "{{ ansible_check_mode }}"
-
-- name: Check filebeat index
-  uri:
-    url: "{{ openio_elasticsearch_url }}/oio-filebeat"
-    method: GET
-    status_code:
-      - 200
-      - 404
-  register: fb_index
-  tags: configure
-  when:
-    - not openio_elasticsearch_provision_only
-    - inventory_hostname == openio_elasticsearch_bootstrap_node
-  ignore_errors: "{{ ansible_check_mode }}"
-
-- name: Provision filebeat lifecycle
-  uri:
-    url: "{{ openio_elasticsearch_url }}/_ilm/policy/filebeat"
-    method: PUT
-    body: "{{ openio_elasticseach_filebeat_lifecycle | to_json }}"
-    status_code: 200
-    body_format: json
-  tags: configure
-  when:
-    - inventory_hostname == openio_elasticsearch_bootstrap_node
-    - not openio_elasticsearch_provision_only
-    - fb_index.status == 404
-  ignore_errors: "{{ ansible_check_mode }}"
-
-- name: Provision filebeat index
-  uri:
-    url: "{{ openio_elasticsearch_url }}/oio-filebeat"
-    method: PUT
-    body: "{{ lookup('file','filebeat_index.json') }}"
-    status_code: 200
-    body_format: json
-  tags: configure
-  when:
-    - inventory_hostname == openio_elasticsearch_bootstrap_node
-    - not openio_elasticsearch_provision_only
-    - fb_index.status == 404
-  ignore_errors: "{{ ansible_check_mode }}"
-
-- name: Provision filebeat ingest pipeline
-  uri:
-    url: "{{ openio_elasticsearch_url }}/_ingest/pipeline/filebeat"
-    method: PUT
-    body: "{{ lookup('file','filebeat_pipeline.json') }}"
-    status_code: 200
-    body_format: json
-  tags: configure
-  when:
-    - not openio_elasticsearch_provision_only
+    - not openio_elasticsearch_maintenance_mode | bool
     - inventory_hostname == openio_elasticsearch_bootstrap_node
   ignore_errors: "{{ ansible_check_mode }}"
 ...

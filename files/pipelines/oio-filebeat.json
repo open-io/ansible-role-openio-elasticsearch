@@ -1,5 +1,5 @@
 {
-  "description" : "Filebeat ingestion",
+  "description" : "OpenIO filebeat ingestion",
   "processors" : [
     {
       "remove" : {
