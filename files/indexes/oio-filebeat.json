@@ -4,10 +4,6 @@
       "@timestamp": {
         "type": "date"
       },
-      "oio_client_ip": {
-        "ignore_above": 128,
-        "type": "keyword"
-      },
       "oio_host": {
         "ignore_above": 64,
         "type": "keyword"
@@ -112,7 +108,7 @@
           "limit": "10000"
         }
       },
-      "lifecycle.name": "filebeat",
+      "lifecycle.name": "oio-filebeat",
       "number_of_replicas": "1",
       "number_of_shards": "5",
       "refresh_interval": "5s"

@@ -1,47 +1,52 @@
 [![Build Status](https://travis-ci.org/open-io/ansible-role-openio-elasticsearch.svg?branch=master)](https://travis-ci.org/open-io/ansible-role-openio-elasticsearch)
 # Ansible role `elasticsearch`
 
-An Ansible role for elasticsearch. Specifically, the responsibilities of this role are to:
+An Ansible role for install elasticsearch. Specifically, the responsibilities of this role are to:
 
-- Install
-- Configure
+- install and configure elasticsearch
 
 ## Requirements
 
-- Ansible 2.4+
+- Ansible 2.9+
 
 ## Role Variables
 
-| Name                                      | Type    | Description                             |
-| ----------------------------------------- | ------- | --------------------------------------- |
-| openio_elasticsearch_namespace            | string  | OpenIO namespace for Elasticsearch      |
-| openio_elasticsearch_serviceid            | string  | Elasticsearch service id                |
-| openio_elasticsearch_gridinit_dir         | string  | Path to gridinit directory              |
-| openio_elasticsearch_gridinit_file_prefix | string  | Gridinit unit file prefix               |
-| openio_elasticsearch_bind_interface       | string  | Interface to bind to                    |
-| openio_elasticsearch_bind_address         | string  | IP address to listen on                 |
-| openio_elasticsearch_http_port            | integer | HTTP port to listen on                  |
-| openio_elasticsearch_transport_tcp_port   | integer | TCP port to listen on                   |
-| openio_elasticsearch_cluster_name         | string  | ES cluster name                         |
-| openio_elasticsearch_node_name            | string  | ES node name                            |
-| openio_elasticsearch_volume               | string  | path to volume used to store index data |
-| openio_elasticsearch_provision_only       | string  | Provision only, without restarting      |
-| openio_elasticsearch_version              | string  | ES version                              |
-| openio_elasticsearch_sysctl               | dict    | Sysctl options to apply                 |
-| openio_elasticsearch_java_args            | string  | ES java args                            |
-| openio_elasticsearch_pid_directory        | string  | Path to ES pid directory                |
-| openio_elasticsearch_memory               | string  | Amount of RAM to allocate to ES JVM     |
-| openio_elasticsearch_additional_config    | dict    | Additional ES config options            |
-| openio_elasticseach_filebeat_lifecycle    | dict    | Lifecycle policy for filebeat index     |
+| Variable   | Default | Comments (type)  |
+| :---       | :---    | :---             |
+| `openio_elasticsearch_namespace` | `"{{ namespace \| d('OPENIO') }}"` | OpenIO Namespace |
+| `openio_elasticsearch_maintenance_mode` | `"{{ openio_maintenance_mode \| d(false) }}"` | Maintenance mode |
+| `openio_elasticsearch_bind_address` | `"{{ openio_mgmt_bind_address \| d(ansible_default_ipv4.address) }}"` | Binding IP address |
+| `openio_elasticsearch_bind_port` | `6903` | HTTP Binding port |
+| `openio_elasticsearch_transport_port` | `6904` | TCP Binding port |
+| `openio_elasticsearch_url` | `"http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_bind_port}}"` | URL to access elasticsearch |
+| `openio_elasticsearch_nodes_group` | `"elasticsearch"` | Elasticsearch group in the inventory |
+| `openio_elasticsearch_bootstrap_node` | `` | On which node to run bootstrap |
+| `openio_elasticsearch_cluster_hosts` | `` | URLs of hosts in the cluster |
+| `openio_elasticsearch_cluster_nodes` | `` | Hostnames of hosts in the cluster |
+| `openio_elasticsearch_cluster_name` | `"{{ openio_elasticsearch_namespace }}-1"` | Name of the cluster |
+| `openio_elasticsearch_node_name` | `"{{ ansible_hostname }}"` | Name of the node |
+| `openio_elasticsearch_sysctl` | `` | sysctl entries |
+| `openio_elasticsearch_memory` | `"1024M"` | Allocated memory |
+| `openio_elasticsearch_java_args` | `` | Java options |
+| `openio_elasticsearch_additional_config` | `{}` | Specific ES configuration |
+| `openio_elasticseach_filebeat_lifecycle` | `` | Filebeat index lifecycle configuration |
+| `openio_elasticsearch_classpath` | `` | ES classpath |
+| `openio_elasticsearch_url` | `"http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_bind_port }}"` | Access URL of the ES instance |
 
 ## Dependencies
-
-No dependencies.
+- https://github.com/open-io/ansible-role-openio-service
 
 ## Example Playbook
 
-[Example playbook](docker-tests/test.yml)
+```yaml
+- hosts: all
+  gather_facts: true
+  become: true
 
+  tasks:
+    - include_role:
+        name: elasticsearch
+```
 
 ## Contributing
 
@@ -52,9 +57,4 @@ The best way to submit a PR is by first creating a fork of this Github project, 
 Github can then easily create a PR based on that branch.
 
 ## License
-
-GNU AFFERO GENERAL PUBLIC LICENSE, Version 3
-
-## Contributors
-
-- [Cedric DELGEHIER](https://github.com/cdelgehier) (maintainer)
+Copyright (C) 2015-2020 OpenIO SAS
