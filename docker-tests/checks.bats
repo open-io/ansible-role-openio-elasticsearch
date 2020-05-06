@@ -5,8 +5,8 @@
 
 # Tests
 
-@test 'Elasticsearch listens 6903' {
-  run bash -c "curl -qs http://${SUT_IP}:6903/_cluster/health"
+@test 'Elasticsearch listens 6904' {
+  run bash -c "curl -qs http://${SUT_IP}:6904/_cluster/health"
   echo "output: "$output
   echo "status: "$status
   [[ "${status}" -eq "0" ]]
