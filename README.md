@@ -16,8 +16,8 @@ An Ansible role for install elasticsearch. Specifically, the responsibilities of
 | `openio_elasticsearch_namespace` | `"{{ namespace \| d('OPENIO') }}"` | OpenIO Namespace |
 | `openio_elasticsearch_maintenance_mode` | `"{{ openio_maintenance_mode \| d(false) }}"` | Maintenance mode |
 | `openio_elasticsearch_bind_address` | `"{{ openio_mgmt_bind_address \| d(ansible_default_ipv4.address) }}"` | Binding IP address |
-| `openio_elasticsearch_bind_port` | `6903` | HTTP Binding port |
-| `openio_elasticsearch_transport_port` | `6904` | TCP Binding port |
+| `openio_elasticsearch_bind_port` | `6904` | HTTP Binding port |
+| `openio_elasticsearch_transport_port` | `6905` | TCP Binding port |
 | `openio_elasticsearch_url` | `"http://{{ openio_elasticsearch_bind_address }}:{{ openio_elasticsearch_bind_port}}"` | URL to access elasticsearch |
 | `openio_elasticsearch_nodes_group` | `"elasticsearch"` | Elasticsearch group in the inventory |
 | `openio_elasticsearch_bootstrap_node` | `` | On which node to run bootstrap |
