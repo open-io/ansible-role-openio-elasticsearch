@@ -2,7 +2,7 @@
 openio_elasticsearch_namespace: "{{ namespace | d('OPENIO') }}"
 openio_elasticsearch_maintenance_mode: "{{ openio_maintenance_mode | d(false) }}"
 
-openio_elasticsearch_bind_address: "{{ openio_mgmt_bind_address | d(ansible_default_ipv4.address) }}"
+openio_elasticsearch_bind_address: "{{ openio_bind_mgmt_address | d(ansible_default_ipv4.address) }}"
 openio_elasticsearch_bind_port: 6904
 openio_elasticsearch_transport_port: 6905
 
