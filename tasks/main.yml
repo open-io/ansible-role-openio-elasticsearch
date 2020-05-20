@@ -2,7 +2,7 @@
 - include_role:
     name: openio-service
   vars:
-    openio_service_type: "oio-elasticsearch"
+    openio_service_type: "elasticsearch"
     openio_service_namespace: "{{ openio_elasticsearch_namespace }}"
     openio_service_maintenance_mode: "{{ openio_elasticsearch_maintenance_mode }}"
     openio_service_packages:
