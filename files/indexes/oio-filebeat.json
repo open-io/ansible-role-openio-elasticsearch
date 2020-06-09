@@ -37,6 +37,10 @@
       "oio_process_id": {
         "type": "integer"
       },
+      "oio_protocol": {
+        "ignore_above": 8,
+        "type": "keyboard"
+      },
       "oio_remote_addr": {
         "type": "ip"
       },
